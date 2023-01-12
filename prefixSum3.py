@@ -16,22 +16,39 @@ K = mnk[2]
 colorList = ['B', 'W']
 board = [str(input()) for _ in range(Y)]
 
-superMinCnt = K*K
-for y in range(0, Y - K + 1):
-    for x in range(0, X - K + 1):
-        colorCount = 0
-        for color in colorList:
-            minCnt = 0
-            lineCnt = 0
-            for j in range(0, K):
-                count = 0
-                for i in range(0, K):
-                    if board[y + j][x + i] != colorList[(colorCount+count + lineCnt) % 2]:
-                        minCnt += 1
-                    count += 1
-                lineCnt += 1
-            colorCount += 1
+chgMap = {}
 
-            superMinCnt = minCnt if minCnt < superMinCnt else superMinCnt
 
-print(superMinCnt)
+for colorCnt in range(0, len(colorList)):
+    chgList = [[0 for _ in range(0, X)] for _ in range(Y)]
+    lineCnt = 0
+    for y in range(0, Y):
+        columnCnt = 0
+        for x in range(0, X):
+            if board[y][x] != colorList[(colorCnt + lineCnt + columnCnt) % 2]:
+                chgList[y][x] += 1
+            columnCnt += 1
+        lineCnt += 1
+    chgMap[colorList[colorCnt]] = chgList
+
+
+prefixMap = {}
+
+for color in colorList:
+    chgList = chgMap[color]
+    sumList = [[0 for _ in range(X + 1)] for _ in range(Y + 1)]
+    for y in range(1, Y+1):
+        for x in range(1, X+1):
+            sumList[y][x] = chgList[y-1][x-1] + sumList[y-1][x] + sumList[y][x-1] - sumList[y-1][x-1]
+    prefixMap[color] = sumList
+
+superMin = K*K
+for color in colorList:
+    sumList = prefixMap[color]
+    for y in range(0, Y - K + 1):
+        for x in range(0, X - K + 1):
+            # xy -> x+k-1, y+k-1
+            minCnt = sumList[y+K][x+K] - sumList[y][x+K] - sumList[y+K][x] + sumList[y][x]
+            superMin = superMin if superMin < minCnt else minCnt
+
+print(superMin)
